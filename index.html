@@ -85,10 +85,10 @@ Blocking work is usually Javascript execution or Garbage Collection in Node.js
         <section data-markdown>
           ## 🏭 Throughput 🏭
 
-          Node computation time is single-threaded and on-CPU tasks will be serialized.
+          JavaScript execution is single-threaded and on-CPU tasks will be serialized.
 
           **IMPORTANT**:
-          Competing on-CPU task serialization can cause cascading blockage, resulting in significant task completion delays.
+          This can cascade into significant task completion delays.
 
 
           Note:
@@ -100,12 +100,11 @@ Blocking work is usually Javascript execution or Garbage Collection in Node.js
 
 
         <section data-markdown>
-          ## 🖼 Glitching .gif Images 🖼
-          ### Case Study
+## 🖼 Glitching .gif Images 🖼
+### Case Study
 
-          * [readimage](http://npm.im/readimage) reads gif/png/jpg and converts to a common format
-          * [glitcher](http://npm.im/glitcher) various image glitches and manipulations
-          * [writegif](http://npm.im/writegif) writes that common format to an animated gif
+Collaborative art project that did user-driven image glitching and manipulation. Core manipulation logic is in [glitcher](http://npm.im/glitcher).
+
         </section>
 
         <section>
@@ -140,7 +139,7 @@ Blocking work is usually Javascript execution or Garbage Collection in Node.js
         <section data-markdown>
           ## 🔍 1. Identify the nature of the problem 🔍
 
-          Based on logs and the code, I have identified the bulk of the time is the image manipulation. It's not doing any network calls or other asynchronous work.
+          Based on logs and the code, the bulk of the time is the image manipulation. It's not doing any network calls or other asynchronous work.
 
           Note:
           Feels like a cop-out... how to do this with tooling?
@@ -217,7 +216,6 @@ Blocking work is usually Javascript execution or Garbage Collection in Node.js
 
           * Compiler tracing (IRHydra, --prof, --trace-deopt)
           * Code review
-          * Static analysis?
         </section>
 
         <section data-markdown>
@@ -231,15 +229,11 @@ Blocking work is usually Javascript execution or Garbage Collection in Node.js
         </section>
 
         <section data-markdown>
-          ## 📍 4. Identify the location 📍
-        </section>
-
-        <section data-markdown>
           ## 🛠 Using `perf` 🛠
 
           * The `perf` tool on Linux is a kernel-level CPU profiling tool
           * Captures full stack, C++ &amp; JS execution
-          * Follow [these instructions](https://gist.github.com/trevnorris/9616784)(not up to date!)
+          * Followed [these instructions](https://gist.github.com/trevnorris/9616784) (not up to date!)
           * Or check out the new tool [0x](http://npm.im/0x)
 
           Note:
@@ -272,7 +266,7 @@ Blocking work is usually Javascript execution or Garbage Collection in Node.js
 
         <section data-markdown>
 ## 📈 v8-profiler results 📈
-
+(open assets/median.cpuprofile in Chrome DevTools)
 ![v8-profiler results](img/median-cdt.png)
 
 Note:
@@ -292,6 +286,10 @@ We can see garbage collection in V8-Profiler output, can eliminate that concern
           * etc.
 
         (out of scope for this presentation)
+        </section>
+
+        <section data-markdown>
+          ## 📍 4. Identify the location 📍
         </section>
 
         <section data-markdown>
