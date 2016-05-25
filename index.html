@@ -49,18 +49,10 @@
 ❔🔍🔬📐📍👓📐🔁
 
 Bryce B. Baril -- [@brycebaril](https://twitter.com/brycebaril)
+
+Note:
+Just tweeted the slide deck location
         </section>
-<!--
-        <section data-markdown>
-## 🌠 About Me 🌠
-
-Lead Engineer on N|Solid at NodeSource
-
-Previously written APM and other monitoring software.
-
-Performance is always on my mind.
-        </section>
--->
 
         <section data-markdown>
           ## 🚀 Performance 🚀
@@ -142,7 +134,7 @@ Blocking work is usually Javascript execution or Garbage Collection in Node.js
         <section data-markdown>
           ## ❔ 0. Is it fast enough? ❔
 
-          The logs show some images take well over a second with the manipulation `replaceBackground`, and this is a blocking operation.
+          The logs show some images take well over a second with the manipulation `replaceBackground`.
         </section>
 
         <section data-markdown>
@@ -219,6 +211,16 @@ Blocking work is usually Javascript execution or Garbage Collection in Node.js
         </section>
 
         <section data-markdown>
+          ## 🛠 Why is it slow? 🛠
+
+          If the problem is slow JavaScript execution:
+
+          * Compiler tracing (IRHydra, --prof, --trace-deopt)
+          * Code review
+          * Static analysis?
+        </section>
+
+        <section data-markdown>
           ## 📐 3. Measure 📐
 
           With our selected poor-performing image, we'll use `/usr/bin/time` to measure a baseline:
@@ -272,6 +274,24 @@ Blocking work is usually Javascript execution or Garbage Collection in Node.js
 ## 📈 v8-profiler results 📈
 
 ![v8-profiler results](img/median-cdt.png)
+
+Note:
+We can see garbage collection in V8-Profiler output, can eliminate that concern
+        </section>
+
+        <section data-markdown>
+        ## 🙋 What if it was garbage collection? 🙋
+
+        * 🛠 Tools
+          * heap snapshots
+          * post-mortem analysis (mdb, lldb, etc.)
+        * 💪 Solutions
+          * fix errant closures
+          * hold less data/parts of objects vs whole objects
+          * code/static analysis
+          * etc.
+
+        (out of scope for this presentation)
         </section>
 
         <section data-markdown>
@@ -280,31 +300,6 @@ Blocking work is usually Javascript execution or Garbage Collection in Node.js
           The `avg()` function averages every frame to make a simulated background frame.
 
           Both `perf` and `v8-profiler` indicate we're spending the bulk of the time there.
-        </section>
-
-        <section data-markdown>
-          ## 🛠 Why is it slow? 🛠
-
-          If the problem is slow JavaScript execution:
-
-          * Compiler tracing (IRHydra, --prof, --trace-deopt)
-          * Code review
-          * Static analysis?
-        </section>
-
-        <section data-markdown>
-## 🙋 What if it was garbage collection? 🙋
-
-* 🛠 Tools
-  * heap snapshots
-  * post-mortem analysis (mdb, lldb, etc.)
-* 💪 Solutions
-  * fix errant closures
-  * hold less data/parts of objects vs whole objects
-  * code/static analysis
-  * etc.
-
-(out of scope for this presentation)
         </section>
 
         <section data-markdown>
@@ -325,6 +320,42 @@ Note:
 * don't create functions in loops, avoid Promises
 * decrease instruction count
 * optimizing compiler makes assumptions, work with it, avoid invalidating assumptions
+        </section>
+
+        <section data-markdown>
+## 🆕 COOL NEW THINGS! 🆕
+
+* 🆕 Transpile to ES7!
+* 🆕 ES6!
+* 🆕 ES5! (wait, what?)
+
+These things can absolutely make your code easier _**for you**_ to work with.
+        </section>
+
+        <section data-markdown>
+## 😭 However... 😭
+
+Generally these:
+* Add additional code that will add to execution time
+* Are not yet optimizable by V8
+        </section>
+
+        <section data-markdown>
+## ⏪ Welcome to ES3! ⏪
+
+![Romancing The Jit](img/romancing_shoe.gif)
+
+Note:
+Even nice ES5 features such as Array.forEach Array.map, etc. are slower
+        </section>
+
+        <section data-markdown>
+## 😅 Oh right, focus on `avg()` 😅
+
+Focus your effort on high return-on-investment. Don't sacrifice dev convenience by refactoring everything to speed up _fast enough_ code.
+
+Note:
+Some things could cause systemic slowdowns, hard to see if every function got slower.
         </section>
 
         <section data-markdown>
@@ -352,31 +383,6 @@ The optimizing compiler doesn't care if your code is *GOOD*
 Note:
 Even if it's highly optimized assembly code, the optimizing compiler can't save you from doing stupid things.
 Unncecessary work always takes time
-        </section>
-
-        <section data-markdown>
-## 🚀 COOL NEW THINGS! 🚀
-
-So you like Promises? Generators? transpilers? ES6? ES5!?
-
-These things can absolutely make your code easier _**for you**_ to work with.
-        </section>
-
-        <section data-markdown>
-## 😭 However... 😭
-
-Generally these:
-* Add additional code that will add to execution time
-* Are not yet optimizable by V8
-        </section>
-
-        <section data-markdown>
-## ⏪ Welcome to ES3! ⏪
-
-![Romancing The Jit](img/romancing_shoe.gif)
-
-Note:
-Even nice ES5 features such as Array.forEach Array.map, etc. are slower
         </section>
 
         <section data-markdown>
