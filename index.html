@@ -4,9 +4,9 @@
   <head>
     <meta charset="utf-8">
 
-    <title>Node.js Performance Optimization Case Study - Node Interactive</title>
+    <title>Node.js Performance Optimization Case Study - GOTO Chicago 2016</title>
 
-    <meta name="description" content="Node.js Performance Optimization Case Study - Node Interactive">
+    <meta name="description" content="Node.js Performance Optimization Case Study - GOTO Chicago 2016">
     <meta name="author" content="Bryce B. Baril">
 
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -40,9 +40,27 @@
 
       <!-- Any section element inside of this container is displayed as a slide -->
       <div class="slides">
-        <section data-markdown>
-![title slide](img/title_slide.png)
+
+        <section data-markdown data-background="img/goto_intro.png">
         </section>
+
+        <section data-markdown>
+# Node.js Performance Optimization
+❔🔍🔬📐📍👓📐🔁
+
+Bryce B. Baril -- [@brycebaril](https://twitter.com/brycebaril)
+        </section>
+<!--
+        <section data-markdown>
+## 🌠 About Me 🌠
+
+Lead Engineer on N|Solid at NodeSource
+
+Previously written APM and other monitoring software.
+
+Performance is always on my mind.
+        </section>
+-->
 
         <section data-markdown>
           ## 🚀 Performance 🚀
@@ -57,7 +75,7 @@
 
 "Work is done in a timely manner."
 
-Often includes (and dominated by) to Asynchronous IO in Node.js
+Often includes (and is dominated by) Asynchronous IO in Node.js
 
 `task_end - task_start`
         </section>
@@ -67,7 +85,7 @@ Often includes (and dominated by) to Asynchronous IO in Node.js
 
 "Work isn't blocking other work."
 
-Blocking is usually Javascript execution or Garbage Collection in Node.js
+Blocking work is usually Javascript execution or Garbage Collection in Node.js
 
 `requests-per-second`
         </section>
@@ -75,8 +93,11 @@ Blocking is usually Javascript execution or Garbage Collection in Node.js
         <section data-markdown>
           ## 🏭 Throughput 🏭
 
+          Node computation time is single-threaded and on-CPU tasks will be serialized.
+
           **IMPORTANT**:
-          Blocking operations can cause cascading blockage resulting in significant task completion delays.
+          Competing on-CPU task serialization can cause cascading blockage, resulting in significant task completion delays.
+
 
           Note:
           A,B,C scheduled at the same time, each will take 10ms
@@ -91,8 +112,8 @@ Blocking is usually Javascript execution or Garbage Collection in Node.js
           ### Case Study
 
           * [readimage](http://npm.im/readimage) reads gif/png/jpg and converts to a common format
-          * [glitcher](http://npm.im/glitcher) various image glitches and manpiulations
-          * [writegif](http://npm.im/writegif) write that common format to an animated gif
+          * [glitcher](http://npm.im/glitcher) various image glitches and manipulations
+          * [writegif](http://npm.im/writegif) writes that common format to an animated gif
         </section>
 
         <section>
@@ -112,7 +133,7 @@ Blocking is usually Javascript execution or Garbage Collection in Node.js
         <section data-markdown>
           ## 🚨 WARNING 🚨
 
-          Do **NOT** skip straight to step 5. Randomly applied V8 compiler tricks are unlikely to have a significant impact.
+          Do **NOT** skip straight to step 5. Randomly applied V8 compiler tricks are unlikely to have any significant impact.
 
           Note:
           Saving 20ms on a task that includes a 5 second database query won't provide a significant improvement.
@@ -121,13 +142,16 @@ Blocking is usually Javascript execution or Garbage Collection in Node.js
         <section data-markdown>
           ## ❔ 0. Is it fast enough? ❔
 
-          The logs show some images take well over a second to manipulate with the manipulation `replaceBackground`, and this is a blocking operation.
+          The logs show some images take well over a second with the manipulation `replaceBackground`, and this is a blocking operation.
         </section>
 
         <section data-markdown>
           ## 🔍 1. Identify the nature of the problem 🔍
 
           Based on logs and the code, I have identified the bulk of the time is the image manipulation. It's not doing any network calls or other asynchronous work.
+
+          Note:
+          Feels like a cop-out... how to do this with tooling?
         </section>
 
         <section data-markdown>
@@ -144,6 +168,7 @@ Blocking is usually Javascript execution or Garbage Collection in Node.js
           (out of scope for this presentation)
           Note:
             These are usually infrequent and slow enough you can always log. This is essentially what APM vendors do for you automatically.
+            Caching: recurring theme--don't do things if you don't have to
         </section>
 
         <section data-markdown>
@@ -211,10 +236,12 @@ Blocking is usually Javascript execution or Garbage Collection in Node.js
           ## 🛠 Using `perf` 🛠
 
           * The `perf` tool on Linux is a kernel-level CPU profiling tool
-          * Captures full stack, C++ & JS execution
-          * Follow [these instructions](https://gist.github.com/trevnorris/9616784)
+          * Captures full stack, C++ &amp; JS execution
+          * Follow [these instructions](https://gist.github.com/trevnorris/9616784)(not up to date!)
+          * Or check out the new tool [0x](http://npm.im/0x)
 
-          (They are not up-to-date but the steps are all there)
+          Note:
+          0x was not an option when this slide deck was created, haven't tried it yet.
         </section>
 
         <section data-markdown>
@@ -229,7 +256,7 @@ Blocking is usually Javascript execution or Garbage Collection in Node.js
 
         <section data-markdown>
 ## 🔥 Perf Flamegraph 🔥
-[![flamegraph from perf tool](img/median-flame.svg)](img/median-flame.svg)
+![flamegraph from perf tool](img/median-flame.svg)]
         </section>
 
         <section data-markdown>
@@ -303,14 +330,53 @@ Note:
         <section data-markdown>
 ## ⚙ Optimizing Compilers (Simplified) ⚙
 
-* JavaScript is extremely flexible. Most code doesn't use that flexibility.
-* Optimizing compilers make assumptions on how you use JS and cut corners with optimized assembly code.
-* Deoptimization is when you invalidate the assumptions it made, forcing it to discard the assembly version.
+* JavaScript is extremely flexible.
+* Most code doesn't use that flexibility.
+* Observations -> Assumptions -> Optimize to pure assembly
+* Assumption invalid -> Deoptimize -> Discard assembly
 
 Note:
 * Parse and analyze your code as it is executed making optimized assembly based on what it encounters with guards against cases it skipped.
-
+* "trust but verify"
 * If you deoptimize a function too many times it will give up on optimization.
+        </section>
+
+        <section data-markdown>
+## ⚙ Optimizing Compilers ⚙
+
+The optimizing compiler doesn't care if your code is *GOOD*
+
+* Code that does things the wrong/unoptimal way can be "optimized"
+* Code that does the wrong thing can be "optimized"
+
+Note:
+Even if it's highly optimized assembly code, the optimizing compiler can't save you from doing stupid things.
+Unncecessary work always takes time
+        </section>
+
+        <section data-markdown>
+## 🚀 COOL NEW THINGS! 🚀
+
+So you like Promises? Generators? transpilers? ES6? ES5!?
+
+These things can absolutely make your code easier _**for you**_ to work with.
+        </section>
+
+        <section data-markdown>
+## 😭 However... 😭
+
+Generally these:
+* Add additional code that will add to execution time
+* Are not yet optimizable by V8
+        </section>
+
+        <section data-markdown>
+## ⏪ Welcome to ES3! ⏪
+
+![Romancing The Jit](img/romancing_shoe.gif)
+
+Note:
+Even nice ES5 features such as Array.forEach Array.map, etc. are slower
         </section>
 
         <section data-markdown>
@@ -320,7 +386,7 @@ Note:
           * Nothing beats V8 telling you what it didn't like.
           * My favorite tool: [IRHydra2](http://mrale.ph/irhydra/2/)
             * Follow the instructions on that page
-            * Load them into IRHydra2 (it's a web app)
+            * Load results into IRHydra2 (it's a web app)
         </section>
 
         <section data-markdown>
@@ -334,7 +400,7 @@ Note:
 
 * the `avg` function had an eager deoptimization
 * ... but it was the inlined Buffer constructor in node core ...
-* (So I filed a [PR against node](https://github.com/nodejs/node/pull/4158), released today in 5.2.0)
+* (So I fixed it in Node core...)
 * otherwise nothing too interesting ¯\\\_(ツ)_/¯
         </section>
 
@@ -355,7 +421,7 @@ Our image is 800 x 450 pixels with 51 frames
 
     800 * 450 = 360000 pixels per frame
 
-So 360000 51 pixel `sortPixels` calls. 😨
+So 360_000 `sortPixels` calls, each sorting 51 pixels. 😨
         </section>
 
         <section data-markdown>
@@ -391,7 +457,7 @@ Calculating `mean` doesn't require a sort. Maybe it will work?
 
         <section data-markdown>
 ## 🔥 Perf Flamegraph (Mean) 🔥
-[![flamegraph from perf tool using mean](img/mean-flame.svg)](img/mean-flame.svg)
+![flamegraph from perf tool using mean](img/mean-flame.svg)]
         </section>
 
         <section data-markdown>
@@ -430,6 +496,9 @@ Bryce B. Baril - [http://brycebaril.com](http://brycebaril.com)
 Twitter: [@brycebaril](http://twitter.com/brycebaril)
 
 NSolid: [Try NSolid!](http://downloads.nodesource.com)
+        </section>
+
+        <section data-markdown data-background="img/goto_last.png">
         </section>
 
       </div>
